@@ -39,17 +39,19 @@ def main():
 def handle_dialog(res, req):
     user_id = req['session']['user_id']
     if req['session']['new']:
-        res['response']['text'] = 'Привет! Назови своё имя!'
+        response_with_buttons(res, 'Привет! Назови своё имя!')
         sessionStorage[user_id] = {
             'first_name': None,  # здесь будет храниться имя
             'game_started': False  # здесь информация о том, что пользователь начал игру. По умолчанию False
         }
         return
-
+    if 'помощь' in req['request']['command']:
+        res['response']['text'] = 'текст помощи'
+        return
     if sessionStorage[user_id]['first_name'] is None:
         first_name = get_first_name(req)
         if first_name is None:
-            res['response']['text'] = 'Не расслышала имя. Повтори, пожалуйста!'
+            response_with_buttons(res, 'Не расслышала имя. Повтори, пожалуйста!')
         else:
             sessionStorage[user_id]['first_name'] = first_name
             # создаём пустой массив, в который будем записывать города, которые пользователь уже отгадал
@@ -82,17 +84,7 @@ def handle_dialog(res, req):
                 res['response']['text'] = 'Ну и ладно!'
                 res['end_session'] = True
             else:
-                res['response']['text'] = 'Не поняла ответа! Так да или нет?'
-                res['response']['buttons'] = [
-                    {
-                        'title': 'Да',
-                        'hide': True
-                    },
-                    {
-                        'title': 'Нет',
-                        'hide': True
-                    }
-                ]
+                response_with_buttons(res, 'Не поняла ответа! Так да или нет?', True)
         else:
             play_game(res, req)
 
