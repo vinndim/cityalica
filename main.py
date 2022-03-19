@@ -56,17 +56,8 @@ def handle_dialog(res, req):
             sessionStorage[user_id]['guessed_cities'] = []
             # как видно из предыдущего навыка, сюда мы попали, потому что пользователь написал своем имя.
             # Предлагаем ему сыграть и два варианта ответа "Да" и "Нет".
-            res['response']['text'] = f'Приятно познакомиться, {first_name.title()}. Я Алиса. Отгадаешь город по фото?'
-            res['response']['buttons'] = [
-                {
-                    'title': 'Да',
-                    'hide': True
-                },
-                {
-                    'title': 'Нет',
-                    'hide': True
-                }
-            ]
+            response_with_buttons(res, f'Приятно познакомиться,'
+                                       f' {first_name.title()}. Я Алиса. Отгадаешь город по фото?', True)
     else:
         # У нас уже есть имя, и теперь мы ожидаем ответ на предложение сыграть.
         # В sessionStorage[user_id]['game_started'] хранится True или False в зависимости от того,
@@ -122,7 +113,7 @@ def play_game(res, req):
         res['response']['card']['type'] = 'BigImage'
         res['response']['card']['title'] = 'Что это за город?'
         res['response']['card']['image_id'] = cities[city][attempt - 1]
-        res['response']['text'] = 'Тогда сыграем!'
+        response_with_buttons(res, 'Тогда сыграем!')
     else:
         # сюда попадаем, если попытка отгадать не первая
         city = sessionStorage[user_id]['city']
@@ -130,17 +121,7 @@ def play_game(res, req):
         if get_city(req) == city:
             # если да, то добавляем город к sessionStorage[user_id]['guessed_cities'] и
             # отправляем пользователя на второй круг. Обратите внимание на этот шаг на схеме.
-            res['response']['text'] = 'Правильно! Сыграем ещё?'
-            res['response']['buttons'] = [
-                {
-                    'title': 'Да',
-                    'hide': True
-                },
-                {
-                    'title': 'Нет',
-                    'hide': True
-                }
-            ]
+            response_with_buttons(res, 'Правильно! Сыграем ещё?', True)
             sessionStorage[user_id]['guessed_cities'].append(city)
             sessionStorage[user_id]['game_started'] = False
             return
@@ -151,17 +132,7 @@ def play_game(res, req):
                 # В этом случае говорим ответ пользователю,
                 # добавляем город к sessionStorage[user_id]['guessed_cities'] и отправляем его на второй круг.
                 # Обратите внимание на этот шаг на схеме.
-                res['response']['text'] = f'Вы пытались. Это {city.title()}. Сыграем ещё?'
-                res['response']['buttons'] = [
-                    {
-                        'title': 'Да',
-                        'hide': True
-                    },
-                    {
-                        'title': 'Нет',
-                        'hide': True
-                    }
-                ]
+                response_with_buttons(res, f'Вы пытались. Это {city.title()}. Сыграем ещё?', True)
                 sessionStorage[user_id]['game_started'] = False
                 sessionStorage[user_id]['guessed_cities'].append(city)
                 return
@@ -171,7 +142,7 @@ def play_game(res, req):
                 res['response']['card']['type'] = 'BigImage'
                 res['response']['card']['title'] = 'Неправильно. Вот тебе дополнительное фото'
                 res['response']['card']['image_id'] = cities[city][attempt - 1]
-                res['response']['text'] = 'А вот и не угадал!'
+                response_with_buttons(res, 'А вот и не угадал!')
     # увеличиваем номер попытки доля следующего шага
     sessionStorage[user_id]['attempt'] += 1
 
@@ -193,6 +164,27 @@ def get_first_name(req):
             # Если есть сущность с ключом 'first_name', то возвращаем её значение.
             # Во всех остальных случаях возвращаем None.
             return entity['value'].get('first_name', None)
+
+
+def response_with_buttons(res, text, yn=False):
+    res['response']['text'] = text
+    res['response']['buttons'] = [
+        {
+            'title': 'Помощь',
+            'hide': True
+        }
+    ]
+    if yn:
+        res['response']['buttons'].extend([
+            {
+                'title': 'Да',
+                'hide': True
+            },
+            {
+                'title': 'Нет',
+                'hide': True
+            }
+        ])
 
 
 if __name__ == '__main__':
